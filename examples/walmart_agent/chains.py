@@ -48,7 +48,7 @@ def setup_llm():
     Configura o LLM com base na variável de ambiente DEPLOY_TYPE.
     Opções suportadas: 'databricks', 'gcp', 'openai'.
     """
-    deploy_type = os.getenv("DEPLOY_TYPE", "databricks").lower()
+    deploy_type = os.getenv("DEPLOY_TYPE", "openai").lower()
     
     logger.info(f"🔄 Inicializando LLM com Provider: {deploy_type.upper()}")
 
