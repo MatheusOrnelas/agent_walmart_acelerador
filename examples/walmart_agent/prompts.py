@@ -4,13 +4,10 @@ Your task is to generate a SQL query to answer the user's question based on the 
 
 Table: `{catalog}.{schema}.gold_sales_analytics`
 Columns:
-- store_id (INT)
-- product_id (INT)
-- date (DATE)
-- sales_amount (FLOAT)
-- sales_quantity (INT)
-- region (STRING)
-- category (STRING)
+- Store (INT)
+- Weeks_Count (INT)
+- Total_Sales (FLOAT)
+- Avg_Weekly_Sales (FLOAT)
 
 Rules:
 1. Return ONLY the SQL query. No markdown, no explanation.

@@ -1,7 +1,12 @@
+import os
 import logging
 import time
 import json
+from dotenv import load_dotenv
 from typing import Dict, List, Any
+
+load_dotenv()
+
 from langchain_core.messages import AIMessage
 from .state import WalmartState
 from .chains import start_chain, sql_gen_chain, response_chain
@@ -16,6 +21,11 @@ monitor = ServiceMonitor(service_name="walmart-agent-nodes")
 # In production, fetch these from env vars
 # Configurar Credenciais do Databricks (Para o conector SQL)
 # Pegue esses valores em Compute -> Advanced Options -> JDBC/ODBC
+
+print("Server e HTTP PATH")
+print(os.getenv("DATABRICKS_SERVER_HOSTNAME"))
+print(os.getenv("DATABRICKS_HTTP_PATH"))
+
 databricks_service = DatabricksService(
     server_hostname=os.getenv("DATABRICKS_SERVER_HOSTNAME"),
     http_path=os.getenv("DATABRICKS_HTTP_PATH"), # Seu HTTP Path longo
@@ -89,6 +99,7 @@ def executor_node(state: WalmartState) -> WalmartState:
     try:
         start_time = time.time()
         
+        print('sql_query:', sql_query)
         # Execute
         df = databricks_service.execute_query(sql_query, operation_name=f"NODE_{node_id}")
         

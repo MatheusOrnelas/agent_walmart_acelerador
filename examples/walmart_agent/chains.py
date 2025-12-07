@@ -1,5 +1,9 @@
 import os
 import logging
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from langchain_core.output_parsers import JsonOutputParser, StrOutputParser
 from langchain_core.prompts import PromptTemplate
 
@@ -48,6 +52,7 @@ def setup_llm():
     Configura o LLM com base na variável de ambiente DEPLOY_TYPE.
     Opções suportadas: 'databricks', 'gcp', 'openai'.
     """
+
     deploy_type = os.getenv("DEPLOY_TYPE", "openai").lower()
     
     logger.info(f"🔄 Inicializando LLM com Provider: {deploy_type.upper()}")
@@ -102,6 +107,7 @@ def setup_llm():
             raise ImportError("Instale 'langchain-openai' para usar modelos OpenAI.")
             
         api_key = os.getenv("OPENAI_API_KEY")
+        print('api_key', api_key)
         if not api_key:
             raise ValueError("OPENAI_API_KEY é obrigatória para deploy_type='openai'")
             
