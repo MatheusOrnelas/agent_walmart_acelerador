@@ -1,11 +1,13 @@
 import io
 import logging
 from PIL import Image
-from langchain_core.runnables.graph import GraphRunnable
+from typing import Any
+from langchain_core.runnables import Runnable
+
 
 logger = logging.getLogger(__name__)
 
-def save_graph_figure(graph_runnable, output_path: str):
+def save_graph_figure(graph_runnable: Any, output_path: str):
     """
     Saves a visualization of a compiled LangGraph to a file.
 
@@ -26,5 +28,4 @@ def save_graph_figure(graph_runnable, output_path: str):
         logger.info(f"✅ Graph figure saved successfully to: {output_path}")
 
     except Exception as e:
-        logger.error(f"❌ An error occurred while saving the graph figure: {e}")
-
+        logger.warning(f"⚠️ Could not save graph figure (visual check only): {e}")

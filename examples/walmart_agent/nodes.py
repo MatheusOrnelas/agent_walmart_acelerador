@@ -1,6 +1,7 @@
 import logging
 import time
 import json
+from typing import Dict, List, Any
 from langchain_core.messages import AIMessage
 from .state import WalmartState
 from .chains import start_chain, sql_gen_chain, response_chain
@@ -13,10 +14,12 @@ monitor = ServiceMonitor(service_name="walmart-agent-nodes")
 
 # Initialize Databricks Service (Mock credentials for example)
 # In production, fetch these from env vars
+# Configurar Credenciais do Databricks (Para o conector SQL)
+# Pegue esses valores em Compute -> Advanced Options -> JDBC/ODBC
 databricks_service = DatabricksService(
-    server_hostname="mock_server",
-    http_path="/sql/1.0/endpoints/xxx",
-    access_token="dapi..."
+    server_hostname="dbc-asdfadsf-ebbb.cloud.asdfasdf.com",
+    http_path="/sql/1.0/warehouses/asdfsadfsadf", # Seu HTTP Path longo
+    access_token="asdfsadf" # Seu token gerado 
 )
 
 def _log_node_start(node_name: str, state: WalmartState) -> str:
