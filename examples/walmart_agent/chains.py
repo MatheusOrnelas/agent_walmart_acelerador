@@ -1,8 +1,13 @@
 import os
+import logging
 from langchain_core.output_parsers import JsonOutputParser, StrOutputParser
 from langchain_core.prompts import PromptTemplate
 
 from .prompts import sql_gen_template, response_template, start_template
+
+# Configuração de logger
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # def setup_llm():
 #     """
@@ -61,7 +66,7 @@ def setup_llm():
         # - databricks-meta-llama-3-70b-instruct
         # - databricks-dbrx-instruct
         # - databricks-mixtral-8x7b-instruct
-        model_name = os.getenv("DATABRICKS_LLM_MODEL", "databricks-meta-llama-3-70b-instruct")
+        model_name = os.getenv("DATABRICKS_LLM_MODEL", "meta_llama_v3_1_70b_instruct")
         
         return ChatDatabricks(
             endpoint=model_name,

@@ -17,9 +17,9 @@ monitor = ServiceMonitor(service_name="walmart-agent-nodes")
 # Configurar Credenciais do Databricks (Para o conector SQL)
 # Pegue esses valores em Compute -> Advanced Options -> JDBC/ODBC
 databricks_service = DatabricksService(
-    server_hostname="dbc-asdfadsf-ebbb.cloud.asdfasdf.com",
-    http_path="/sql/1.0/warehouses/asdfsadfsadf", # Seu HTTP Path longo
-    access_token="asdfsadf" # Seu token gerado 
+    server_hostname=os.getenv("DATABRICKS_SERVER_HOSTNAME"),
+    http_path=os.getenv("DATABRICKS_HTTP_PATH"), # Seu HTTP Path longo
+    access_token=os.getenv("DATABRICKS_TOKEN")  # Seu token gerado 
 )
 
 def _log_node_start(node_name: str, state: WalmartState) -> str:
