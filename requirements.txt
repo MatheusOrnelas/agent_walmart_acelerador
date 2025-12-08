@@ -1,12 +1,10 @@
 langchain==0.3.25
 langchain-core==0.3.65
-langchain-google-vertexai==2.0.25
 langgraph==0.4.8
-pandas==2.3.0
+pandas<2.2.0
 requests==2.32.4
 python-dotenv==1.1.0
 pydantic==2.11.7
 pillow==11.2.1
-google-cloud-aiplatform==1.97.0
 databricks-sql-connector==3.1.0
 langchain-community==0.3.1

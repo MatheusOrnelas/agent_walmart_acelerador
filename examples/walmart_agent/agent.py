@@ -1,9 +1,13 @@
 import logging
 import os
+from dotenv import load_dotenv
 from langgraph.graph import StateGraph, END
 from src.core.agent import BaseLangGraphAgent
 from .state import WalmartState
 from .nodes import start_node, sql_generator_node, executor_node, response_node
+
+# Load environment variables
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -30,15 +34,16 @@ class WalmartAgent(BaseLangGraphAgent):
         # Add Edges
         workflow.set_entry_point("start")
         
-        # Conditional routing logic (simple for now)
+        # Conditional routing logic
         def route_intent(state: WalmartState):
             if state.get("error"):
                 return "responder" # Fail fast
-            if state.get("intent") == "sales_query":
+            
+            intent = state.get("intent")
+            if intent == "sales_query":
                 return "sql_gen"
             else:
-                # For general info, skip SQL (or handle differently)
-                # Here we force SQL gen for demonstration
+                # Default to SQL gen for this example, but could route to general chat
                 return "sql_gen"
 
         workflow.add_conditional_edges(
@@ -56,16 +61,24 @@ class WalmartAgent(BaseLangGraphAgent):
         
         # Compile
         self.app = workflow.compile()
-        self.save_graph("walmart_agent_architecture.png")
+        try:
+            self.save_graph("walmart_agent_architecture.png")
+        except Exception:
+            logger.warning("Could not save graph visualization (possibly missing dependencies like graphviz)")
+            
         logger.info("Walmart Agent Graph compiled successfully")
 
 if __name__ == "__main__":
-    # Quick test
-    # deploy_type can be passed here or via env var DEPLOY_TYPE
+    # Test execution
     deploy_type = os.getenv("DEPLOY_TYPE", "gcp")
+    project_id = os.getenv("PROJECT_ID", "mock-project")
+    
     print(f"Initializing Agent with deploy_type: {deploy_type}")
     
-    agent = WalmartAgent(project_id="mock-project", deploy_type=deploy_type)
-    print("Agent initialized. Running test query...")
-    response = agent.chat("How were the sales in region North last week?")
-    print(f"Response: {response}")
+    try:
+        agent = WalmartAgent(project_id=project_id, deploy_type=deploy_type)
+        print("Agent initialized. Running test query...")
+        response = agent.chat("How were the sales in region North last week?")
+        print(f"Response: {response}")
+    except Exception as e:
+        print(f"Agent failed to start or run: {e}")

@@ -14,6 +14,9 @@ Rules:
 2. Use standard Spark SQL syntax.
 3. Always limit results to 100 unless specified otherwise.
 4. Current year is 2025.
+5. IMPORTANT: Do NOT assume the existence of any other tables like 'store_region_mapping'. Everything you need about sales is in `gold_sales_analytics`.
+   If the user asks about regions or categories that are not in the schema, you must answer based on the Store ID or aggregate all stores.
+   DO NOT JOIN with tables that are not listed here.
 
 User Question: {messages}
 """

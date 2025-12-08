@@ -17,20 +17,29 @@ from src.monitoring.service_monitor import ServiceMonitor, FailureType
 logger = logging.getLogger(__name__)
 monitor = ServiceMonitor(service_name="walmart-agent-nodes")
 
-# Initialize Databricks Service (Mock credentials for example)
-# In production, fetch these from env vars
-# Configurar Credenciais do Databricks (Para o conector SQL)
-# Pegue esses valores em Compute -> Advanced Options -> JDBC/ODBC
+# Global service instance (Lazy loaded)
+_databricks_service = None
 
-print("Server e HTTP PATH")
-print(os.getenv("DATABRICKS_SERVER_HOSTNAME"))
-print(os.getenv("DATABRICKS_HTTP_PATH"))
-
-databricks_service = DatabricksService(
-    server_hostname=os.getenv("DATABRICKS_SERVER_HOSTNAME"),
-    http_path=os.getenv("DATABRICKS_HTTP_PATH"), # Seu HTTP Path longo
-    access_token=os.getenv("DATABRICKS_TOKEN")  # Seu token gerado 
-)
+def get_service() -> DatabricksService:
+    """
+    Lazy load Databricks Service to avoid initialization errors 
+    during import or in environments where env vars are not set immediately.
+    """
+    global _databricks_service
+    if _databricks_service is None:
+        server = os.getenv("DATABRICKS_SERVER_HOSTNAME")
+        http_path = os.getenv("DATABRICKS_HTTP_PATH")
+        token = os.getenv("DATABRICKS_TOKEN")
+        
+        if not server or not http_path or not token:
+            logger.warning("Databricks credentials not fully set in environment variables. Service might fail if used.")
+            
+        _databricks_service = DatabricksService(
+            server_hostname=server,
+            http_path=http_path,
+            access_token=token
+        )
+    return _databricks_service
 
 def _log_node_start(node_name: str, state: WalmartState) -> str:
     """Helper to log node start with consistent formatting (Reused pattern)"""
@@ -69,6 +78,12 @@ def start_node(state: WalmartState) -> WalmartState:
 def sql_generator_node(state: WalmartState) -> WalmartState:
     """Generate SQL based on natural language"""
     node_id = _log_node_start("SQL_GEN_NODE", state)
+    
+    # If previous node failed, skip
+    if state.get("error"):
+        logger.warning(f"Skipping SQL_GEN_NODE due to previous error: {state.get('error')}")
+        return state
+
     try:
         messages = state["messages"]
         last_message = messages[-1].content
@@ -91,17 +106,31 @@ def sql_generator_node(state: WalmartState) -> WalmartState:
 def executor_node(state: WalmartState) -> WalmartState:
     """Execute SQL on Databricks"""
     node_id = _log_node_start("EXECUTOR_NODE", state)
+    
+    # Fail fast if previous steps failed
+    if state.get("error"):
+        logger.warning(f"Skipping EXECUTOR_NODE due to previous error: {state.get('error')}")
+        return state
+
     sql_query = state.get("sql_query")
     
+    if not sql_query:
+        error_msg = "No SQL query generated to execute."
+        logger.error(error_msg)
+        state["error"] = error_msg
+        return state
+
     # Monitor start
     req_id = monitor.log_attempt_start("EXECUTE_SQL", "databricks_gold_sales", {"query": sql_query})
     
     try:
         start_time = time.time()
         
-        print('sql_query:', sql_query)
+        # Get service instance (Lazy load)
+        service = get_service()
+        
         # Execute
-        df = databricks_service.execute_query(sql_query, operation_name=f"NODE_{node_id}")
+        df = service.execute_query(sql_query, operation_name=f"NODE_{node_id}")
         
         # Convert to simple format for LLM
         if not df.empty:
@@ -133,6 +162,12 @@ def response_node(state: WalmartState) -> Dict[str, List[AIMessage]]:
         messages = state["messages"]
         last_message = messages[-1].content
         
+        # Handle cases where we have an error
+        if state.get("error"):
+            error_response = f"I encountered an error while processing your request: {state.get('error')}"
+            _log_node_end("RESPONSE_NODE", node_id, False, state.get("error"))
+            return {"messages": messages + [AIMessage(content=error_response)]}
+
         response = response_chain.invoke({
             "messages": last_message,
             "sql_query": state.get("sql_query", "N/A"),
@@ -145,4 +180,3 @@ def response_node(state: WalmartState) -> Dict[str, List[AIMessage]]:
     except Exception as e:
         _log_node_end("RESPONSE_NODE", node_id, False, str(e))
         return {"messages": messages + [AIMessage(content=f"Error generating response: {str(e)}")]}
-
