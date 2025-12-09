@@ -59,13 +59,12 @@ def setup_llm():
 
     if deploy_type == "databricks":
         try:
-            from langchain_databricks import ChatDatabricks
-            # Se der erro de import, tente: from langchain_community.chat_models import ChatDatabricks
+            from databricks_langchain import ChatDatabricks
         except ImportError:
             try:
-                from langchain_community.chat_models import ChatDatabricks
+                from langchain_databricks import ChatDatabricks
             except ImportError:
-                raise ImportError("Instale 'langchain-databricks' ou 'langchain-community' para usar modelos Databricks.")
+                raise ImportError("Instale 'databricks-langchain' ou 'langchain-databricks' para usar modelos Databricks.")
 
         # Nome do modelo padrão. No Databricks Foundation Models, os nomes comuns são:
         # - databricks-meta-llama-3-70b-instruct
